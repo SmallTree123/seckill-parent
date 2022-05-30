@@ -1,0 +1,42 @@
+server:
+  port: 18084
+spring:
+  application:
+    name: seckill-monitor
+  datasource:
+    driver-class-name: org.apache.calcite.avatica.remote.Driver
+    url: jdbc:avatica:remote:url=http://192.168.220.128:8082/druid/v2/sql/avatica/
+    type: com.alibaba.druid.pool.DruidDataSource
+  cloud:
+    nacos:
+      config:
+        file-extension: yaml
+        server-addr: 127.0.0.1:8848
+      discovery:
+        #Nacos的注册地址
+        server-addr: 127.0.0.1:8848
+  redis:
+    host: 192.168.220.128
+    port: 6379
+#  redis:
+#    cluster:
+#      nodes:
+#        - 192.168.220.128:6379
+#        - redis-server:7002
+#        - redis-server:7003
+#        - redis-server:7004
+#        - redis-server:7005
+#        - redis-server:7006
+
+#elasticjob
+elaticjob:
+  zookeeper:
+    server-lists: 192.168.220.128:2181
+    namespace: monitortask
+
+#Druid
+druidurl: jdbc:avatica:remote:url=http://192.168.220.128:8082/druid/v2/sql/avatica/
+
+logging:
+  pattern:
+    console: "%msg%n"

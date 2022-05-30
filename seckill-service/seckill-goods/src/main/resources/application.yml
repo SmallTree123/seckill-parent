@@ -1,0 +1,66 @@
+server:
+  port: 18081
+spring:
+  jackson:
+    time-zone: UTC
+  application:
+    name: seckill-goods
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.220.128:3306/seckill_goods?serverTimezone=GMT%2b8&useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true
+    username: root
+    password: root
+  cloud:
+    nacos:
+      config:
+        file-extension: yaml
+        server-addr: 127.0.0.1:8848
+      discovery:
+        #Nacos的注册地址
+        server-addr: 127.0.0.1:8848
+    alibaba:
+      seata:
+        tx-service-group: seata_seckill_transaction
+  redis:
+    host: 192.168.220.128
+    port: 6379
+  data:
+    elasticsearch:
+      cluster-name: elasticsearch
+      cluster-nodes: 192.168.220.128:9300
+
+#    redis:
+#      cluster:
+#        nodes:
+#          - 192.168.0.1:6379
+  #        - redis-server:7002
+  #        - redis-server:7003
+  #        - redis-server:7004
+  #        - redis-server:7005
+  #        - redis-server:7006
+  main:
+    allow-bean-definition-overriding: true
+logging:
+  level:
+    #root: debug开启dubug级别
+    com.seckill.goods.dao: error
+  pattern:
+    console: "%msg%n"
+# mybatis-plus Settings
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  type-aliases-package: com.seckill.goods.pojo
+  global-config:
+    db-config:
+      table-prefix: tb_
+
+#elaticjob
+elaticjob:
+  zookeeper:
+    server-lists: 192.168.220.128:2181
+    namespace: updatetask
+
+#动态定时任务案例
+zkserver: 192.168.220.128:2181
+zknamespace: zknamesp
