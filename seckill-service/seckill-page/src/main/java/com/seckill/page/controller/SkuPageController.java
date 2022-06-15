@@ -77,7 +77,7 @@ public class SkuPageController {
         dataMap.put("name",id+".html");//id.html
         dataMap.put("address","北京");
         dataMap.put("sku",skuResult.getData());
-        dataMap.put("images",skuResult.getData().getImages().split(","));
+        dataMap.put("images",skuResult.getData().getImages().split(";"));
         //获取spec
         String spec = skuResult.getData().getSpec();
         Map<String,String> specMap = JSON.parseObject(spec,Map.class);

@@ -44,22 +44,22 @@ public class Sku implements Serializable{
 	private String images;//商品图片列表
 
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+//	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 	@Column(name = "create_time")
 	private Date createTime;//创建时间
 
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+//	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     @Column(name = "update_time")
 	private Date updateTime;//更新时间
 
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+//	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 	@Column(name = "seckill_begin")
 	private Date seckillBegin;//秒杀开始时间
 
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+//	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 	@Column(name = "seckill_end")
 	private Date seckillEnd;//秒杀结束时间
 

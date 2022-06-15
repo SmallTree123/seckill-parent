@@ -1,6 +1,7 @@
 package com.seckill.goods.dao;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.seckill.goods.pojo.Sku;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -13,6 +14,7 @@ import java.util.List;
  * @Description:Sku的Dao
  * @Date  0:12
  *****/
+@Mapper
 public interface SkuMapper extends BaseMapper<Sku> {
 
     /**
@@ -53,6 +55,15 @@ public interface SkuMapper extends BaseMapper<Sku> {
     @Update("update tb_sku set seckill_num=seckill_num-#{count} where id=#{id} and seckill_num>=#{count} and islock=1")
     int dcount(@Param("id")String id,@Param("count")Integer count);
 
+
+    /**
+     * 递减库存
+     * @param id
+     * @param count
+     * @return
+     */
+    @Update("update tb_sku set seckill_num=seckill_num-#{count} where id=#{id} and seckill_num>=#{count}")
+    int commonDcount(@Param("id")String id,@Param("count")Integer count);
     /***
      * 修改
      */

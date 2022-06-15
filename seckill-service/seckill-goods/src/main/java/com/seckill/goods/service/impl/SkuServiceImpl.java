@@ -12,12 +12,14 @@ import com.seckill.goods.pojo.Sku;
 import com.seckill.goods.pojo.SkuAct;
 import com.seckill.goods.service.SkuService;
 import com.seckill.util.StatusCode;
+import com.sun.jmx.snmp.Timestamp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /****
  * @Author:www.itheima.com
@@ -62,6 +64,12 @@ public class SkuServiceImpl implements SkuService {
         return StatusCode.DECOUNT_OK;
     }
 
+
+    @Override
+    public int commonDcount(String id, Integer count) {
+        return skuMapper.commonDcount(id, count);
+    }
+
     /****
      * 热点商品隔离
      * @param id
@@ -100,7 +108,10 @@ public class SkuServiceImpl implements SkuService {
             info.put("name",currentSku.getName());
             dataMap.put("info",info);
             //1.2次操作合并成1次
-            redisTemplate.boundHashOps(key).putAll(dataMap);
+            redisTemplate.opsForValue().set(key+":id",id);
+            redisTemplate.opsForValue().set(key+":price",currentSku.getSeckillPrice());
+            redisTemplate.opsForValue().set(key+":name",currentSku.getName());
+            redisTemplate.opsForValue().set(key+":num",currentSku.getSeckillNum());
         }
     }
 

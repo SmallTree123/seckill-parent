@@ -8,6 +8,7 @@ import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /*****
  * @Author: http://www.itheima.com
@@ -20,12 +21,12 @@ public class WebSocketServer {
     /****
      * Map，存储用户会话,key用当前的userid
      */
-    private static Map<String,Session> sessionMap = new HashMap<String,Session>();
+    private static Map<String,Session> sessionMap = new ConcurrentHashMap<>();
 
     /****
      * Map，存储Session的ID和userid的映射关系
      */
-    private static Map<String,String> idsMap = new HashMap<String,String>();
+    private static Map<String,String> idsMap = new ConcurrentHashMap<String,String>();
 
     /****
      * 1.建立连接后调用该方法

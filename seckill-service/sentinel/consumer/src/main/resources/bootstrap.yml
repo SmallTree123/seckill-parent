@@ -1,0 +1,30 @@
+server:
+  port: 18083
+spring:
+  application:
+    name: consumer
+  cloud:
+    nacos:
+      config:
+        file-extension: yaml
+        server-addr: 127.0.0.1:8848
+      discovery:
+        #Nacos的注册地址
+        server-addr: 127.0.0.1:8848
+#链接Sentinel控制台的地址信息配置
+    #sentinel
+    sentinel:
+      transport:
+        port: 8719
+        dashboard: 192.168.220.128:8858
+
+  main:
+    allow-bean-definition-overriding: true
+#Sentinel对feign的支持
+feign:
+  sentinel:
+    enabled: true
+
+logging:
+  pattern:
+    console: "%msg%n"

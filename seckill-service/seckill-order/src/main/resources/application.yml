@@ -4,30 +4,34 @@ spring:
   application:
     name: seckill-order
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://db-server:3306/seckill_general_order?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.220.128:3306/seckill_general_order?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
     username: root
-    password: 123456
+    password: root
   cloud:
     nacos:
       config:
         file-extension: yaml
-        server-addr: nacos-server:8848
+        server-addr: 127.0.0.1:8848
       discovery:
         #Nacos的注册地址
-        server-addr: nacos-server:8848
-    #alibaba:
-    #  seata:
-    #    tx-service-group: seata_seckill_transaction
+        server-addr: 127.0.0.1:8848
+    alibaba:
+      seata:
+        tx-service-group: my_test_tx_group
   redis:
-    cluster:
-      nodes:
-        - redis-server:7001
-        - redis-server:7002
-        - redis-server:7003
-        - redis-server:7004
-        - redis-server:7005
-        - redis-server:7006
+    host: 192.168.220.128
+    port: 6379
+    database: 0
+  #  redis:
+  #    cluster:
+  #      nodes:
+  #        - redis-server:7001
+  #        - redis-server:7002
+  #        - redis-server:7003
+  #        - redis-server:7004
+  #        - redis-server:7005
+  #        - redis-server:7006
 
   main:
     allow-bean-definition-overriding: true
@@ -39,7 +43,7 @@ spring:
       buffer-memory: 33554432 #即32MB的批处理缓冲区
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      bootstrap-servers: kafka-server:9092 #如果kafka启动错误，打开debug级别日志，出现Can't resolve address: flink:9092 的错误，需要在 windows下修改IP映射即可， C:\Windows\System32\drivers\etc\hosts, 192.168.234.128 flink。
+      bootstrap-servers: 192.168.220.128:9092 #如果kafka启动错误，打开debug级别日志，出现Can't resolve address: flink:9092 的错误，需要在 windows下修改IP映射即可， C:\Windows\System32\drivers\etc\hosts, 192.168.234.128 flink。
     consumer:
       group-id: test
       auto-offset-reset: latest #（1）earliest:当各分区下有已提交的offset时，从提交的offset开始消费；无提交的offset时，从头开始消费；（2）latest:当各分区下有已提交的offset时，从提交的offset开始消费；无提交的offset时，消费新产生的该分区下的数据 ；（3）none：topic各分区都存在已提交的offset时，从offset后开始消费；只要有一个分区不存在已提交的offset，则抛出异常
@@ -48,7 +52,7 @@ spring:
       max-poll-records: 5 #一次拉起的条数
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      bootstrap-servers: kafka-server:9092
+      bootstrap-servers: 192.168.220.128:9092
 logging:
   pattern:
     console: "%msg%n"
@@ -62,8 +66,36 @@ hystrix:
           enabled: true
         isolation:
           thread:
-            timeoutInMilliseconds: 100000 #断路器超时时间，默认1000ms
+            timeoutInMilliseconds: 10000 #断路器超时时间，默认1000ms
 #超时配置
 ribbon:
-  ReadTimeout: 3000000
-  ConnectTimeout: 300000
+  ReadTimeout: 30000
+  ConnectTimeout: 30000
+#mybatis-plus配置
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  type-aliases-package: com.seckill.order.pojo
+  global-config:
+    db-config:
+      table-prefix: tb_
+
+
+seata:
+  enabled: true
+  enable-auto-data-source-proxy: true
+  tx-service-group: my_test_tx_group
+  registry:
+    type: nacos
+    nacos:
+      application: seata-server
+      server-addr: 127.0.0.1:8848
+      username: nacos
+      password: nacos
+  service:
+    vgroup-mapping:
+      my_test_tx_group: default
+    disable-global-transaction: false
+  client:
+    rm:
+      report-success-enable: false

@@ -1,0 +1,29 @@
+server:
+  port: 8001
+spring:
+  application:
+    name: gateway-web
+  cloud:
+    nacos:
+      config:
+        file-extension: yaml
+        server-addr: 127.0.0.1:8848
+      discovery:
+        #Nacos的注册地址
+        server-addr: 127.0.0.1:8848
+    #sentinel
+    sentinel:
+      transport:
+        port: 8719
+        dashboard: 192.168.220.128:8080
+  main:
+    allow-bean-definition-overriding: true
+
+logging:
+  pattern:
+    console: "%msg%n"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'

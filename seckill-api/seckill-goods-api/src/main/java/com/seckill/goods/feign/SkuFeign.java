@@ -3,6 +3,7 @@ import com.seckill.goods.pojo.Sku;
 import com.seckill.util.JwtTokenUtil;
 import com.seckill.util.Result;
 import com.seckill.util.StatusCode;
+import feign.hystrix.FallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,14 +15,21 @@ import java.util.Map;
  * @Project: seckill
  * @Description: com.seckill.goods.feign.SkuFeign
  ****/
-@FeignClient(value = "seckill-goods")
+@FeignClient(value = "seckill-goods",fallback = FallbackFactory.Default.class)
 public interface SkuFeign {
 
     /****
      * 库存递减
      */
-    @PutMapping(value = "/sku/dcount/{id}/{count}")
+    @GetMapping(value = "/sku/dcount/{id}/{count}")
     Result<Sku> dcount(@PathVariable(value = "id")String id,@PathVariable(value = "count")Integer count);
+
+
+    /****
+     * 非热点商品库存递减
+     */
+    @GetMapping(value = "/sku/commonDcount/{id}/{count}")
+    Result<Sku> commonDcount(@PathVariable(value = "id")String id,@PathVariable(value = "count")Integer count);
 
     /***
      * 热点商品隔离

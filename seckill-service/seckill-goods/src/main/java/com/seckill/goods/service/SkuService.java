@@ -19,6 +19,12 @@ public interface SkuService {
 
 
     /****
+     * 非热点商品库存递减
+     */
+    int commonDcount(String id,Integer count);
+
+
+    /****
      * 热点商品隔离
      */
     void hotIsolation(String id);

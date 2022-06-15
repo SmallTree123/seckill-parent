@@ -39,7 +39,7 @@ public class AuthorizeFilter implements GlobalFilter,Ordered {
 
         // /api/user/login放行
         ///api/order/add 测试放行
-        if(path.equals("/api/user/login") || path.equals("/api/admin/login") || path.equals("/api/search") || path.equals("/api/activity/times")){
+        if(path.equals("/api/user/login") || path.equals("/api/admin/login") || path.equals("/api/search") || path.equals("/api/activity/times") || path.equals("/api/brand")){
             //放行
             return chain.filter(exchange);
         }

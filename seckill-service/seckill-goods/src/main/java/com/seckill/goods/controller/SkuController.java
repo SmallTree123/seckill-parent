@@ -54,7 +54,7 @@ public class SkuController {
     /****
      * 库存递减
      */
-    @PutMapping(value = "/dcount/{id}/{count}")
+    @GetMapping(value = "/dcount/{id}/{count}")
     public Result<Sku> dcount(@PathVariable(value = "id")String id,@PathVariable(value = "count")Integer count){
         //1.调用业务层实现递减
         int code = skuService.dcount(id, count);
@@ -74,6 +74,18 @@ public class SkuController {
                 default:
         }
         //3.根据状态码，响应不同的提示信息
+        return  new Result<Sku>(true,code,message,sku);
+    }
+
+    /****
+     * 库存递减
+     */
+    @GetMapping(value = "/commonDcount/{id}/{count}")
+    public Result<Sku> commonDcount(@PathVariable(value = "id")String id,@PathVariable(value = "count")Integer count){
+        //1.调用业务层实现递减
+        int code = skuService.commonDcount(id, count);
+        String message="库存递减成功";
+        Sku sku = skuService.findById(id);;
         return  new Result<Sku>(true,code,message,sku);
     }
 

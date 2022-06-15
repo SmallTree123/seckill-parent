@@ -93,9 +93,11 @@ public class NettyWebSocketServer {
     public void sendMessage(String message,String userid){
         //获取用户会话
         Session session = sessionMap.get(userid);
-
+        System.out.println("发送人："+userid);
+        System.out.println("目的地："+session);
         //发送消息
         if(session!=null){
+            System.out.println("当前要发送的消息是："+message);
             session.sendText(message);
         }
     }

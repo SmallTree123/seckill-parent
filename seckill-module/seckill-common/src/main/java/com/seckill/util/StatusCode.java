@@ -19,6 +19,7 @@ public class StatusCode {
     public static final int DECOUNT_HOT=205;//商品是热卖商品
     public static final int DECOUNT_OK=200;//库存递减成功
     public static final int ORDER_QUEUE=202;//抢购商品正在排队
+    public static final int ORDER_UNION=203;//24小时之内不能重复购买
     public static final int ORDER_OK=200;//抢单成功
 
     //令牌无效

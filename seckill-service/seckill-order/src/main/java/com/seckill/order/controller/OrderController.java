@@ -36,8 +36,8 @@ public class OrderController {
     /****
      * 添加订单
      */
-    @PostMapping(value = "/add/{id}")
-    public Result add(@PathVariable(value = "id") String id, @RequestHeader(value = "Authorization") String authorization) {
+    @PostMapping(value = "/add/{id}/{num}")
+    public Result add(@PathVariable(value = "id") String id,@PathVariable(value = "num") Integer num, @RequestHeader(value = "Authorization") String authorization) {
         String username = null;
         try {
             //解析令牌
@@ -53,7 +53,7 @@ public class OrderController {
         order.setCreateTime(new Date());
         order.setUpdateTime(order.getCreateTime());
         order.setUsername(username);
-        order.setTotalNum(1);
+        order.setTotalNum(num);
         //添加订单
         int code = orderService.add(order);
         switch (code) {
@@ -63,6 +63,8 @@ public class OrderController {
                 return new Result(false, StatusCode.DECOUNT_NUM, "库存不足！");
             case StatusCode.ORDER_QUEUE:
                 return new Result(true, StatusCode.ORDER_QUEUE, "排队抢购中！");
+            case StatusCode.ORDER_UNION:
+                return new Result(true, StatusCode.ORDER_QUEUE, "24小时之内不能重复购买！");
             default:
                 return new Result(false, StatusCode.ERROR, "抢单发生异常！");
         }

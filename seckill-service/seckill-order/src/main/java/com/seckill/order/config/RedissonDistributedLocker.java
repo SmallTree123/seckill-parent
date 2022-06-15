@@ -58,6 +58,12 @@ public class RedissonDistributedLocker implements DistributedLocker {
      */
     @Override
     public boolean tryLock(String lockkey, long timeout, long leasetime, TimeUnit unit) {
+        RLock lock = redissonClient.getLock(lockkey);
+        try {
+            return lock.tryLock(timeout, leasetime, unit);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 

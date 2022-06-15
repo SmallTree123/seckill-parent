@@ -16,18 +16,20 @@ import com.seckill.util.Result;
 import com.seckill.util.StatusCode;
 import com.seckill.util.TimeUtil;
 import io.seata.spring.annotation.GlobalTransactional;
+import org.redisson.Redisson;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.BoundHashOperations;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 /****
  * @Author:www.itheima.com
@@ -58,6 +60,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private MessageFeign messageFeign;
 
+
+    private AtomicInteger atomicInteger = new AtomicInteger(0);
+
     /****
      * 热点商品下单
      * @param orderMap
@@ -70,19 +75,22 @@ public class OrderServiceImpl implements OrderService {
 
         String username = orderMap.get("username");
         String id = orderMap.get("id");
+        int totalNum = Integer.parseInt(orderMap.get("num"));
 
         //Redis中对应的key
         String key="SKU_"+id;
         String lockkey="LOCKSKU_"+id;
         String userKey="USER"+username+"ID"+id;
+        String queueKey = "SKU_"+id+":queue";
+        String numKey = "SKU_"+id+":num";
 
         //如果key在redis缓存，则表示商品信息在Redis中进行操作
-        boolean bo =true;// redissonDistributedLocker.tryLock(lockkey, 10, 10, TimeUnit.MINUTES);
+        boolean bo = redissonDistributedLocker.tryLock(lockkey, 10, 10, TimeUnit.MINUTES);
         if(bo){
-            if(redisTemplate.hasKey(key)){
+            if(redisTemplate.hasKey(key+":id")){
                 //获取商品数量
-                Integer num = Integer.parseInt(redisTemplate.boundHashOps(key).get("num").toString());
-
+                Object o = redisTemplate.opsForValue().get(numKey);
+                Integer num = Integer.parseInt(o.toString());
                 if(num<=0){
                     //商品售罄通知
                     messageMap.put("code",20001);
@@ -95,7 +103,7 @@ public class OrderServiceImpl implements OrderService {
 
                 //1.创建Order
                 Order order = new Order();
-                order.setTotalNum(1);
+                order.setTotalNum(totalNum);
                 order.setCreateTime(new Date());
                 order.setUpdateTime(order.getCreateTime());
                 order.setId("No"+idWorker.nextId());
@@ -108,19 +116,16 @@ public class OrderServiceImpl implements OrderService {
                 orderMapper.insert(order);
 
                 //2.Redis中对应的num递减
-                num--;
-                if(num==0){
-                    skuFeign.zero(id);
-                }
-
+                skuFeign.commonDcount(id,totalNum);
+                num-=totalNum;
                 //2.清理用户排队信息
-                Map<String,Object> allMap = new HashMap<String,Object>();
-                allMap.put(userKey,0);
-                allMap.put("num",num);
-                redisTemplate.boundHashOps(key).putAll(allMap);
+//                redisTemplate.opsForValue().set(queueKey,0);
+//                redisTemplate.opsForValue().set(numKey,num);
+//                redisTemplate.delete(numKey);
+
+
                 //3.记录用户购买过该商品,24小时后过期
-                redisTemplate.boundValueOps(userKey).set("");
-                redisTemplate.expire(userKey,1,TimeUnit.MINUTES);
+//                redisTemplate.opsForValue().set(userKey,"",1,TimeUnit.DAYS);
 
                 //抢单成功通知
                 messageMap.put("code",200);
@@ -129,8 +134,8 @@ public class OrderServiceImpl implements OrderService {
             }
 
             //释放锁
-            //redissonDistributedLocker.unLock(lockkey);
-            return;
+            redissonDistributedLocker.unLock(lockkey);
+//            return;
         }
 
         //抢单失败通知
@@ -144,50 +149,76 @@ public class OrderServiceImpl implements OrderService {
      * @param order
      * @return
      */
-    @GlobalTransactional
     @Override
+//    @GlobalTransactional
     public int add(Order order) {
-        String userKey="USER"+order.getUsername()+"ID"+order.getSkuId();
-        //1.递减库存
-        Result<Sku> dcount = skuFeign.dcount(order.getSkuId(), order.getTotalNum());
-        //2.递减成功->下单->记录当前用户抢单的时间点，24小时内不能抢购该商品
-        if(dcount.getCode()== StatusCode.DECOUNT_OK){
-            //int q=10/0;
-            Sku sku = dcount.getData();
-            //下单
-            //order.setId("No"+idWorker.nextId());
-            order.setOrderStatus("0");
-            order.setPayStatus("0");
-            order.setConsignStatus("0");
-            order.setSkuId(sku.getId());
-            order.setName(sku.getName());
-            order.setPrice(sku.getSeckillPrice()*order.getTotalNum());
-            orderMapper.insert(order);
-            //记录当前用户抢单的时间点，24小时内不能抢购该商品
-            redisTemplate.boundValueOps(userKey).set("");
-            redisTemplate.boundValueOps(userKey).expire(1, TimeUnit.MINUTES);
-            return StatusCode.ORDER_OK;
-        }else{
-            //3.递减失败
-            //405库存不足
-            if(dcount.getCode()==StatusCode.DECOUNT_NUM){
+        ReentrantLock reentrantLock = new ReentrantLock();
+        try {
+            String userKey="USER"+order.getUsername()+"ID"+order.getSkuId();
+            //同一用户24小时只能不能重复消费
+//        if (null != redisTemplate.opsForValue().get(userKey)){
+//            return StatusCode.ORDER_UNION;
+//        }
+
+            reentrantLock.lock();
+            String numKey = "SKU_"+order.getSkuId()+":num";
+            Long decrement = redisTemplate.opsForValue().decrement(numKey, order.getTotalNum().longValue());
+            if(decrement <= 0){
+                reentrantLock.unlock();
                 return StatusCode.DECOUNT_NUM;
-            }else if(dcount.getCode()==StatusCode.DECOUNT_HOT){
-                //205商品热点
-                String key = "SKU_"+order.getSkuId();
-                Long increment = redisTemplate.boundHashOps(key).increment(userKey, 1);
-                if(increment==1){
-                    //执行排队
-                    Map<String,String> queueMap = new HashMap<String,String>();
-                    queueMap.put("username",order.getUsername());
-                    queueMap.put("id",order.getSkuId());
-                    kafkaTemplate.send("neworder", JSON.toJSONString(queueMap));
-                }
-                return StatusCode.ORDER_QUEUE;
             }
 
-            //0
-            return dcount.getCode();
+            //1.递减库存
+            Result<Sku> dcount = skuFeign.dcount(order.getSkuId(), order.getTotalNum());
+            //2.递减成功->下单->记录当前用户抢单的时间点，24小时内不能抢购该商品
+            if(dcount.getCode()== StatusCode.DECOUNT_OK){
+    //            int q=10/0;
+                Sku sku = dcount.getData();
+                //下单
+                //order.setId("No"+idWorker.nextId());
+                order.setOrderStatus("0");
+                order.setPayStatus("0");
+                order.setConsignStatus("0");
+                order.setSkuId(sku.getId());
+                order.setName(sku.getName());
+                order.setPrice(sku.getSeckillPrice()*order.getTotalNum());
+                orderMapper.insert(order);
+                //记录当前用户抢单的时间点，24小时内不能抢购该商品
+                redisTemplate.opsForValue().set(userKey,"",1,TimeUnit.DAYS);
+                return StatusCode.ORDER_OK;
+            }else{
+                //3.递减失败
+                //405库存不足
+                if(dcount.getCode()==StatusCode.DECOUNT_NUM){
+                    return StatusCode.DECOUNT_NUM;
+                }else if(dcount.getCode()==StatusCode.DECOUNT_HOT){
+                    //205商品热点
+                    String key = "SKU_"+order.getSkuId()+":queue:"+atomicInteger.getAndIncrement();
+                    Long increment = redisTemplate.opsForValue().increment(key, 1);
+                    if(increment==1){
+                        //执行排队
+                        Map<String,String> queueMap = new HashMap<String,String>();
+                        queueMap.put("username",order.getUsername());
+                        queueMap.put("id",order.getSkuId());
+                        queueMap.put("num",order.getTotalNum().toString());
+                        kafkaTemplate.send("neworder", JSON.toJSONString(queueMap));
+                    }
+                    return StatusCode.ORDER_QUEUE;
+                }
+
+                //0
+                return dcount.getCode();
+            }
+        } finally {
+            reentrantLock.unlock();
+            //预减库存失败补偿机制
+            String numKey = "SKU_"+order.getSkuId()+":num";
+            Sku sku = skuFeign.findById(order.getSkuId()).getData();
+            Object o = redisTemplate.opsForValue().get(numKey);
+            int num = Integer.parseInt(o.toString());
+            if (num != sku.getSeckillNum()){
+                redisTemplate.opsForValue().set(numKey,sku.getSeckillNum());
+            }
         }
     }
 

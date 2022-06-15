@@ -69,7 +69,7 @@ public class MonitorItemsAccess {
      */
     public String druidSQL(){
         //SQL语句
-        String prefix="SELECT COUNT(*) AS \"viewCount\",uri FROM hotproduct WHERE __time>=CURRENT_TIMESTAMP - INTERVAL '1' HOUR";
+        String prefix="SELECT COUNT(*) AS \"viewCount\",uri FROM hotproduct2 WHERE __time>=CURRENT_TIMESTAMP - INTERVAL '1' HOUR";
         //后部分
         String suffix=" GROUP BY uri HAVING viewCount>5";
 

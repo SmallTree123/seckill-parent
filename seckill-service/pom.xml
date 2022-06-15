@@ -26,6 +26,7 @@
         <module>seckill-seata</module>
         <module>seckill-websocket</module>
         <module>seckill-message</module>
+        <module>sentinel</module>
     </modules>
 
     <dependencies>

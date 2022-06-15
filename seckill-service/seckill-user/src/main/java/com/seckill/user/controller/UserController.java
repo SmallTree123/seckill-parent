@@ -24,7 +24,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/user")
-//@CrossOrigin
+@CrossOrigin
 public class UserController {
 
     @Autowired
@@ -72,6 +72,10 @@ public class UserController {
 
     public static void main(String[] args) {
         System.out.println(DigestUtils.md5DigestAsHex("suchong".getBytes()));
+        System.out.println(DigestUtils.md5DigestAsHex("hemaoqiao".getBytes()));
+        System.out.println(DigestUtils.md5DigestAsHex("wangaidi".getBytes()));
+        System.out.println(DigestUtils.md5DigestAsHex("liuce".getBytes()));
+        System.out.println(DigestUtils.md5DigestAsHex("liujiacheng".getBytes()));
     }
 
 }

@@ -1,0 +1,18 @@
+server:
+  port: 18081
+spring:
+  application:
+    name: goods
+  cloud:
+    nacos:
+      config:
+        file-extension: yaml
+        server-addr: 127.0.0.1:8848
+      discovery:
+        #Nacos的注册地址
+        server-addr: 127.0.0.1:8848
+  main:
+    allow-bean-definition-overriding: true
+logging:
+  pattern:
+    console: "%msg%n"

@@ -1,6 +1,8 @@
 server:
   port: 8001
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: gateway-web
   cloud:
@@ -56,10 +58,16 @@ spring:
               filters:
               - StripPrefix=1
     #sentinel
-#    sentinel:
-#      transport:
-#        port: 8719
-#        dashboard: 192.168.211.137:8858
+    sentinel:
+      transport:
+        port: 8719
+        dashboard: 192.168.220.128:8858
+      scg:
+        fallback:
+          mode: response # 重定向（redirect） 或者 响应（response）
+          # redirect: # mode 为 redirect 时，设置重定向URL
+          response-status: 200 # 响应状态码
+          response-body: "{code: 500, msg: '服务器压力山大，请稍后再试！'}" # 响应内容体
 #超时配置
 ribbon:
   ReadTimeout: 3000000

@@ -20,7 +20,7 @@ spring:
         server-addr: 127.0.0.1:8848
     alibaba:
       seata:
-        tx-service-group: seata_seckill_transaction
+        tx-service-group: my_test_tx_group
   redis:
     host: 192.168.220.128
     port: 6379
@@ -64,3 +64,24 @@ elaticjob:
 #动态定时任务案例
 zkserver: 192.168.220.128:2181
 zknamespace: zknamesp
+
+
+#seata配置
+seata:
+  enabled: true
+  enable-auto-data-source-proxy: true
+  tx-service-group: my_test_tx_group
+  registry:
+    type: nacos
+    nacos:
+      application: serverAddr
+      server-addr: 127.0.0.1:8848
+      username: nacos
+      password: nacos
+  service:
+    vgroup-mapping:
+      my_test_tx_group: default
+    disable-global-transaction: false
+  client:
+    rm:
+      report-success-enable: false
